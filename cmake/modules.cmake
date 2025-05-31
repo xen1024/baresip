@@ -10,6 +10,7 @@ set(MODULES
   audiounit
   aufile
   augain
+  aulevels
   auresamp
   ausine
   av1
