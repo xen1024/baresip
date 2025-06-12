@@ -9,8 +9,11 @@
 #include <baresip.h>
 #include "core.h"
 
+// def AUDIO_PTIME [
 
 enum { AUDIO_PTIME = 20 };
+
+// def AUDIO_PTIME ]
 
 
 struct peer_connection {
@@ -323,6 +326,8 @@ int peerconnection_add_audio_track(struct peer_connection *pc,
 	media = media_track_add(&pc->medial, MEDIA_KIND_AUDIO,
 				mediatrack_close_handler, pc);
 
+				// AUDIO_PTIME [
+
 	err = audio_alloc(&media->u.au, &pc->streaml, &pc->stream_prm, cfg,
 			  NULL, pc->sdp, pc->mnat, pc->mnats,
 			  pc->menc, pc->mencs, AUDIO_PTIME, aucodecl, offerer,
@@ -331,6 +336,8 @@ int peerconnection_add_audio_track(struct peer_connection *pc,
 		warning("peerconnection: audio alloc failed (%m)\n", err);
 		return err;
 	}
+
+					// AUDIO_PTIME ]
 
 	stream_set_ldir(media_get_stream(media), dir);
 

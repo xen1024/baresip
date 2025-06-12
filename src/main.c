@@ -7,6 +7,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#define HAVE_GETOPT
 #ifdef HAVE_GETOPT
 #include <getopt.h>
 #endif

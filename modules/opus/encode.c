@@ -99,6 +99,7 @@ int opus_encode_update(struct auenc_state **aesp, const struct aucodec *ac,
 
 		aes->ch = ac->ch;
 
+		
 		aes->enc = opus_encoder_create(ac->srate, ac->ch,
 					       opus_application,
 					       &opuserr);

@@ -18,6 +18,8 @@ enum {
 	AUDIO_SAMPSZ    = MAX_SRATE * MAX_CHANNELS * MAX_PTIME / 1000
 };
 
+// DEF [
+
 struct mix {
 	struct aubuf *ab;
 	const struct audio *au;
@@ -49,6 +51,8 @@ struct mixminus_dec {
 
 static struct list encs;
 
+// DEF ]
+// DESTRUCTORS [
 
 static void enc_destructor(void *arg)
 {
@@ -86,11 +90,17 @@ static void enc_destructor(void *arg)
 	mem_deref(st->mtx);
 }
 
+// enc_destructor ]
+// dec_destructor [
+
 static void dec_destructor(void *arg)
 {
 	struct mixminus_dec *st = arg;
 	mem_deref(st->fsampv);
 }
+
+// dec_destructor ]
+// mix_destructor [
 
 static void mix_destructor(void *arg)
 {
@@ -98,6 +108,8 @@ static void mix_destructor(void *arg)
 	mem_deref(mix->ab);
 }
 
+// DESTRUCTORS ]
+// ENCODE UPDATE [
 
 static int encode_update(struct aufilt_enc_st **stp, void **ctx,
 			 const struct aufilt *af, struct aufilt_prm *prm,
@@ -196,6 +208,8 @@ static int encode_update(struct aufilt_enc_st **stp, void **ctx,
 	return 0;
 }
 
+// ENCODE UPDATE ]
+// DECODE UPDATE [
 
 static int decode_update(struct aufilt_dec_st **stp, void **ctx,
 			 const struct aufilt *af, struct aufilt_prm *prm,
@@ -230,6 +244,8 @@ static int decode_update(struct aufilt_dec_st **stp, void **ctx,
 	return 0;
 }
 
+// DECODE UPDATE ]
+// READ SAMP [
 
 static void read_samp(struct aubuf *ab, int16_t *sampv, size_t sampc,
 		      size_t stime)
@@ -249,6 +265,8 @@ static void read_samp(struct aubuf *ab, int16_t *sampv, size_t sampc,
 	aubuf_read_samp(ab, sampv, sampc);
 }
 
+// READ SAMP ]
+// ENCODE [
 
 static int encode(struct aufilt_enc_st *aufilt_enc_st, struct auframe *af)
 {
@@ -352,6 +370,8 @@ out:
 	return err;
 }
 
+// ENCODE ]
+// DECODE [
 
 static int decode(struct aufilt_dec_st *aufilt_dec_st, struct auframe *af)
 {
@@ -394,6 +414,8 @@ static int decode(struct aufilt_dec_st *aufilt_dec_st, struct auframe *af)
 	return 0;
 }
 
+// DECODE ]
+// COMMANDS FN [
 
 static int enable_conference(struct re_printf *pf, void *arg)
 {
@@ -452,6 +474,8 @@ static int debug_conference(struct re_printf *pf, void *arg)
 	return 0;
 }
 
+// COMMANDS FN ]
+// AUFILT [
 
 static struct aufilt mixminus = {.name	  = "mixminus",
 				 .encupdh = encode_update,
@@ -459,12 +483,16 @@ static struct aufilt mixminus = {.name	  = "mixminus",
 				 .decupdh = decode_update,
 				 .dech	  = decode};
 
+// AUFILT ]
+// COMMANDS [
 
 static const struct cmd cmdv[] = {
 	{"conference", 'z', 0, "Start conference", enable_conference},
 	{"conference_debug", 'Z', 0, "Debug conference", debug_conference}
 };
 
+// COMMANDS ]
+// MODULE INIT [
 
 static int module_init(void)
 {
@@ -484,6 +512,8 @@ static int module_close(void)
 	return 0;
 }
 
+// MODULE INIT ]
+// EXPORT [
 
 EXPORT_SYM const struct mod_export DECL_EXPORTS(mixminus) = {
 	"mixminus",
@@ -491,3 +521,5 @@ EXPORT_SYM const struct mod_export DECL_EXPORTS(mixminus) = {
 	module_init,
 	module_close
 };
+
+// EXPORT ]

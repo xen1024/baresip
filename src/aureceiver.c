@@ -168,6 +168,7 @@ out:
 	return err;
 }
 
+// aurecv_push_aubuf [
 
 static int aurecv_push_aubuf(struct audio_recv *ar, const struct auframe *af)
 {
@@ -179,6 +180,8 @@ static int aurecv_push_aubuf(struct audio_recv *ar, const struct auframe *af)
 		if (err)
 			return err;
 	}
+
+	// WRITE FRAME PTIME [
 
 #ifndef RELEASE
 	int32_t d, da;
@@ -197,6 +200,8 @@ static int aurecv_push_aubuf(struct audio_recv *ar, const struct auframe *af)
 	if (err)
 		return err;
 
+	// WRITE FRAME PTIME ]
+	
 	ar->srate = af->srate;
 	ar->ch    = af->ch;
 	ar->fmt   = af->fmt;
@@ -210,6 +215,7 @@ static int aurecv_push_aubuf(struct audio_recv *ar, const struct auframe *af)
 	return 0;
 }
 
+// aurecv_push_aubuf ]
 
 static int aurecv_stream_decode(struct audio_recv *ar,
 				const struct rtp_header *hdr,

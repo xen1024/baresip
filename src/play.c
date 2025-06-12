@@ -10,8 +10,11 @@
 #include <baresip.h>
 #include "core.h"
 
+// PTIME def [
 
 enum {PTIME = 40};
+
+// PTIME def ]
 
 /** Audio file player */
 struct play {
@@ -69,7 +72,11 @@ static void tmr_polling(void *arg)
 
 	mtx_lock(&play->lock);
 
+	// tmr_start PTIME [
+
 	tmr_start(&play->tmr, PTIME, tmr_polling, play);
+
+		// tmr_start PTIME ]
 
 	if (play->eof) {
 		if (play->repeat == 0)
