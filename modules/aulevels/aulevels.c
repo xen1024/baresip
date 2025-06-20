@@ -505,7 +505,7 @@ static void mapi_test(void)
 static int module_init(void)
 {
 	// MAP [
-
+#if 0
 	mapi_test();
 
 	// map_alloc
@@ -530,7 +530,7 @@ static int module_init(void)
 
 	// map_free
 	mem_deref(my_map);
-
+#endif
 	// MAP ]
 
 	aufilt_register(baresip_aufiltl(), &aulevels);

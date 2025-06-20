@@ -267,18 +267,31 @@ static void event_handler(enum ua_event ev, struct bevent *event, void *arg)
 	if (err)
 		return;
 
-	err = odict_entry_add(od, "event", ODICT_BOOL, true);
+	// VUMETER skip "events" [
+
+	// Skip "class" for vumeter events
+	if (ev != UA_EVENT_VU_TX && ev != UA_EVENT_VU_RX) {
+		err = odict_entry_add(od, "event", ODICT_BOOL, true);
+	}
+
+	// VUMETER skip "events" ]
+
 	err |= odict_encode_bevent(od, event);
 	if (err) {
 		warning("ctrl_tcp: failed to encode event (%m)\n", err);
 		goto out;
 	}
 
+	// ENCODE JSON [
+
 	err = json_encode_odict(&pf, od);
 	if (err) {
 		warning("ctrl_tcp: failed to encode event JSON (%m)\n", err);
 		goto out;
 	}
+
+	// ENCODE JSON to pf:buf ]
+	// SEND buf:mbuf [
 
 	if (st->tc) {
 		buf->pos = NETSTRING_HEADER_SIZE;
@@ -287,6 +300,8 @@ static void event_handler(enum ua_event ev, struct bevent *event, void *arg)
 			warning("ctrl_tcp: failed to send event (%m)\n", err);
 		}
 	}
+
+	// SEND buf:mbuf ]
 
  out:
 	mem_deref(buf);
