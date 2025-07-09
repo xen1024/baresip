@@ -1,0 +1,99 @@
+/**
+ * @file test/new_aulevels.c  Baresip selftest -- aulevels module
+ *
+ * Copyright (C) 2025 Victor Kozub
+ */
+
+#include <string.h>
+#include <re.h>
+#include <baresip.h>
+#include "test.h"
+//#include "../modules/aulevels/aulevels.h"
+#include "../modules/aulevels/aulevels.c"
+
+int test_mapi(void);
+
+static struct hash *my_map;
+
+void mapi_test(void)
+{
+	mapi_alloc(&my_map);
+
+	uint32_t key = 0;
+    void *val = (void *)123;
+	struct le element;
+	mapi_insert(my_map, key, val, &element);
+
+	struct le *found = mapi_get(my_map, key);
+    if (found) {
+        printf("Found: %i -> %p\n", key, (char *)found->data);
+    }
+
+	mapi_release(my_map);
+}
+
+int test_mapi(void)
+{
+	int err = 0;
+
+   	// TEST MAP [
+	
+    mapi_test();
+
+    
+#if 0
+	// map_alloc
+	int err = hash_alloc(&my_map, 32);
+	if (err) {
+        re_fprintf(stderr, "hash_alloc failed (%m)\n", err);
+        return err;
+    }
+
+	// map_insert
+	// Insert into the map
+    uint32_t key = 0;
+    void *val = (void *)123;
+	struct le element;
+    hash_append(my_map, key, &element, &val);
+
+	// map_get
+	struct le *found = hash_lookup(my_map, key, hash_cmp_handler, &key);
+    if (found) {
+        printf("Found: %i -> %p\n", key, (char *)found->data);
+    }
+
+	// map_free
+	mem_deref(my_map);
+#endif
+
+	// TEST MAP ]
+
+out:
+    return err;
+}
+
+int test_aulevels(void)
+{
+	int err = 0;
+
+   	err = module_load(".", "aulevels");
+	TEST_ERR(err);
+
+    err = test_mapi();
+	TEST_ERR(err);
+
+out:
+    /*
+	struct network *net = NULL;
+
+	err = net_alloc(&net, &default_config);
+	TEST_ERR(err);
+	ASSERT_TRUE(net != NULL);
+
+ out:
+	mem_deref(net);
+    */
+	return err;
+}
+
+

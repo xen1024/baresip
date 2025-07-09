@@ -23,6 +23,8 @@ add_executable(${PROJECT_NAME}
   ua.c
   video.c
 
+  new_aulevels.c
+
   mock/dnssrv.c
 
   sip/aor.c

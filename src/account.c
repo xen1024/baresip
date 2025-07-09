@@ -1521,6 +1521,7 @@ const char *account_sipnat(const struct account *acc)
 	return acc ? acc->sipnat : NULL;
 }
 
+// ACCOUNT ptime - account_ptime [
 
 /**
  * Get the audio packet-time (ptime) of an account
@@ -1534,6 +1535,7 @@ uint32_t account_ptime(const struct account *acc)
 	return acc ? acc->ptime : 0;
 }
 
+// ACCOUNT ptime - account_ptime ]
 
 /**
  * Get the STUN username of an account

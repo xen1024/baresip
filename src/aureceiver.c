@@ -11,6 +11,29 @@
 #include <baresip.h>
 #include "core.h"
 
+#define LIVELOG_DBG
+
+#ifdef LIVELOG_DBG
+
+// LLOG DEF [
+
+#include "../livelogging-cpp/c2/livelog_c.c"
+
+LiveLog *_llog = NULL;
+// extern LiveLog *_llog;
+
+// LLOG DEF ]
+// LLOG INIT [
+
+void llog_init_lazy(void);
+
+void llog_init_lazy(void) {
+	llog_init(&_llog, "logs/baresip_aureceiver.sh");
+}
+
+// LLOG INIT ]
+
+#endif
 
 /**
  * Audio receive pipeline
@@ -174,6 +197,12 @@ static int aurecv_push_aubuf(struct audio_recv *ar, const struct auframe *af)
 {
 	int err;
 	uint64_t bpms;
+
+#ifdef LIVELOG_DBG
+	llog_init_lazy();
+	LiveLog_log_i(_llog, L"aurecv_push_aubuf", L"srate", af->srate);
+	LiveLog_flush(_llog);
+#endif
 
 	if (!ar->aubuf) {
 		err = aurecv_alloc_aubuf(ar, af);
@@ -405,6 +434,10 @@ int aurecv_alloc(struct audio_recv **aupp, const struct config_audio *cfg,
 {
 	struct audio_recv *ar;
 	int err;
+
+#ifdef LIVELOG_DBG
+	llog_init_lazy();
+#endif
 
 	if (!aupp)
 		return EINVAL;

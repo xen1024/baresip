@@ -8,8 +8,9 @@
 #include <re.h>
 #include <rem.h>
 #include <baresip.h>
+#include "aulevels.h"
 
-static struct hash *my_map;
+#include "mapi.c"
 
 #define DEBUG_AULEVELS 0
 
@@ -439,100 +440,9 @@ static const struct cmd cmdv[] = {
 };
 
 // COMMANDS ]
-// MAPI [
-
-static int mapi_alloc(struct hash **map);
-static void mapi_insert(struct hash *map, uint32_t key, void *val, struct le *element);
-static struct le *mapi_get(struct hash *map, uint32_t key);
-static void mapi_release(struct hash *map);
-static void mapi_test(void);
-
-static bool hash_cmp_handler(struct le *le, void *arg)
-{
-	return true;
-//	return le->data == arg;
-}
-
-// map alloc int : ptr
-static int mapi_alloc(struct hash **map)
-{
-	int err = hash_alloc(map, 32);
-	if (err) {
-        re_fprintf(stderr, "hash_alloc failed (%m)\n", err);
-        return err;
-    }
-	return err;
-}
-
-// insert into the map
-static void mapi_insert(struct hash *map, uint32_t key, void *val, struct le *element)
-{
-    hash_append(map, key, element, val);
-}
-
-// map get value for key
-static struct le *mapi_get(struct hash *map, uint32_t key)
-{
-	struct le *found = hash_lookup(map, key, hash_cmp_handler, &key);
-	return found;
-}
-
-// map release
-static void mapi_release(struct hash *map)
-{
-	mem_deref(map);
-}
-
-static void mapi_test(void)
-{
-	mapi_alloc(&my_map);
-
-	uint32_t key = 0;
-    void *val = (void *)123;
-	struct le element;
-	mapi_insert(my_map, key, val, &element);
-
-	struct le *found = mapi_get(my_map, key);
-    if (found) {
-        printf("Found: %i -> %p\n", key, (char *)found->data);
-    }
-
-	mapi_release(my_map);
-}
-
-// MAPI ]
 
 static int module_init(void)
 {
-	// MAP [
-#if 0
-	mapi_test();
-
-	// map_alloc
-	int err = hash_alloc(&my_map, 32);
-	if (err) {
-        re_fprintf(stderr, "hash_alloc failed (%m)\n", err);
-        return err;
-    }
-
-	// map_insert
-	// Insert into the map
-    uint32_t key = 0;
-    void *val = (void *)123;
-	struct le element;
-    hash_append(my_map, key, &element, &val);
-
-	// map_get
-	struct le *found = hash_lookup(my_map, key, hash_cmp_handler, &key);
-    if (found) {
-        printf("Found: %i -> %p\n", key, (char *)found->data);
-    }
-
-	// map_free
-	mem_deref(my_map);
-#endif
-	// MAP ]
-
 	aufilt_register(baresip_aufiltl(), &aulevels);
 
     char s[16384];
