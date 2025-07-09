@@ -22,6 +22,11 @@ struct test {
 #define TEST(a) {a, #a}
 
 static const struct test tests[] = {
+	TEST(test_jbuf),
+	TEST(test_jbuf_adaptive),
+	TEST(test_jbuf_video),
+	TEST(test_jbuf_gnack),
+
 	TEST(test_account),
 	TEST(test_account_uri_complete),
 	TEST(test_call_answer),
@@ -63,10 +68,6 @@ static const struct test tests[] = {
 	TEST(test_contact),
 	TEST(test_bevent_encode),
 	TEST(test_bevent_register),
-	TEST(test_jbuf),
-	TEST(test_jbuf_adaptive),
-	TEST(test_jbuf_video),
-	TEST(test_jbuf_gnack),
 	TEST(test_message),
 	TEST(test_network),
 	TEST(test_play),

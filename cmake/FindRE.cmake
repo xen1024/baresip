@@ -4,7 +4,7 @@ pkg_check_modules(PC_LIBRE QUIET libre)
 find_path(RE_INCLUDE_DIR
   NAME re.h
   HINTS
-    ../re/include
+#    ../re/include
     ${PC_LIBRE_INCLUDEDIR}
     ${PC_LIBRE_INCLUDE_DIRS}
   PATHS /usr/local/include/re /usr/include/re
