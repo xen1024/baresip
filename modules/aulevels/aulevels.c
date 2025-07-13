@@ -159,7 +159,7 @@ struct hash *mapi_lazy_init(void) {
 }
 
 CHANNEL_GAIN *find_channel(void *p) {
-	uint32_t key = p;
+	uint32_t key = (uint32_t)p;
 
 	struct le *found = mapi_get(channels_map, key);
     if (found) {
@@ -171,7 +171,7 @@ CHANNEL_GAIN *find_channel(void *p) {
 }
 
 CHANNEL_GAIN *alloc_channel(void *p) {
-	uint32_t key = p;
+	uint32_t key = (uint32_t)p;
 	CHANNEL_GAIN *channel = calloc(sizeof(*channel), 1);
 
 	if (channels_map) {
@@ -182,13 +182,30 @@ CHANNEL_GAIN *alloc_channel(void *p) {
 }
 
 void dealloc_channel(void *p) {
+	uint32_t key = (uint32_t)p;
+	mapi_delete(channels_map, key);
 }
 
 // Apply gain for channels with au selector for multiple channels
 int channels_apply_gain(struct audio *au, double gain_enc[CH_MAX], double gain_dec[CH_MAX]) {
 	// for each channel
-	/*
-		if (channel->au == au) {
+	if (!channels_map)
+		return -1;
+
+	for (uint i = 0; i < hash_bsize(channels_map); i++) {
+		struct list *hlist = hash_list_idx(channels_map, i);
+		if (!hlist)
+			continue; // SKIP ERROR
+
+		for (struct le *le = list_head(hlist); le; le = le->next) {
+			struct le *item = le->data;
+			if (!item)
+				continue; // SKIP ERROR
+
+			CHANNEL_GAIN *channel = item->data;
+			if (!channel)
+				continue; // SKIP ERROR
+
 			for (int ich = 0; ich < CH_MAX; ich++) {
 				if (gain_enc[ich] >= 0) {
 					channel->gain_enc[ich] = gain_enc[ich];
@@ -198,7 +215,33 @@ int channels_apply_gain(struct audio *au, double gain_enc[CH_MAX], double gain_d
 				}
 			}
 		}
-	*/
+	}
+	return 0;
+}
+
+void dump_channels(void) {
+	if (!channels_map)
+		return;
+
+	for (uint i = 0; i < hash_bsize(channels_map); i++) {
+		struct list *hlist = hash_list_idx(channels_map, i);
+		if (!hlist)
+			continue; // SKIP ERROR
+
+		for (struct le *le = list_head(hlist); le; le = le->next) {
+			struct le *item = le->data;
+			if (!item)
+				continue; // SKIP ERROR
+
+			CHANNEL_GAIN *channel = item->data;
+			if (!channel)
+				continue; // SKIP ERROR
+
+			for (int ich = 0; ich < CH_MAX; ich++) {
+				info("CHANNEL %p CH %i gain_enc %lf gain_dec %lf", channel->gain_enc[ich], channel->gain_dec[ich]);
+			}
+		}
+	}
 }
 
 #endif // USE_CHANNELS_MAPI
@@ -393,7 +436,7 @@ static struct aufilt aulevels = {
 	.dech	  = decode_frame
 };
 
-// COMMAND /aulevelsch [
+// COMMAND /aulevels [
 
 static int cmd_aulevels_channel(struct re_printf *pf, void *arg)
 {
@@ -507,11 +550,22 @@ static int cmd_aulevels_channel(struct re_printf *pf, void *arg)
 	return 0;
 }
 
-// COMMAND /aulevelsch ]
+// COMMAND /aulevels ]
+// COMMAND /aulevelsdump [
+
+static int cmd_aulevels_dump(struct re_printf *pf, void *arg)
+{
+	(void)pf;
+	(void)arg;
+	dump_channels();
+}
+
+// COMMAND /aulevelsdump ]
 // COMMANDS [
 
 static const struct cmd cmdv[] = {
 	{"aulevels", 0, CMD_PRM, "Set volume for the channel. aulevels <channel> <inout> <gain>", cmd_aulevels_channel},
+	{"aulevelsdump", 0, CMD_PRM, "List all channels", cmd_aulevels_dump},
 };
 
 // COMMANDS ]

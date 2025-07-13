@@ -25,20 +25,53 @@ int run_mapi(void)
 {
 	int err = 0;
 
+	// New map
 	mapi_alloc(&my_map);
 
+	// Create first map element for key=123
 	uint32_t key = 0;
     void *val = (void *)123;
 	struct le element;
 	mapi_insert(my_map, key, val, &element);
 
+	// Create first map element for key=1223355
+	uint32_t key1 = 1223355;
+	struct le *element1 = mapi_insert_alloc(my_map, key1, val);
+	ASSERT_TRUE(element1);
+
+	// Dump map
+	for (uint i = 0; i < hash_bsize(my_map); i++) {
+		struct list *hlist = hash_list_idx(my_map, i);
+		ASSERT_TRUE(hlist);
+
+		for (struct le *le = list_head(hlist); le; le = le->next) {
+			struct le *item = le->data;
+			ASSERT_TRUE(item);
+
+			void *data = item->data;
+
+			printf("%p %i\n", (void *)le, (int)data);
+		}
+	}
+
+	// Get key=123
 	struct le *found = mapi_get(my_map, key);
     if (found) {
-        printf("Found: %i -> %p\n", key, (char *)found->data);
+        printf("Correct! Found: %i -> %p\n", key, (char *)found->data);
     }
 
-	mapi_release(my_map);
+	// Delete key=123
+	mapi_delete(my_map, key);
 
+	// Get key=123 must be NULL
+	found = mapi_get(my_map, key);
+    if (!found) {
+        printf("Correct! Not found: %i\n", key);
+    }
+
+	// Release map
+	mapi_release(my_map);
+out:
 	return err;
 }
 

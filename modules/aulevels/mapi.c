@@ -32,11 +32,28 @@ void mapi_insert(struct hash *map, uint32_t key, void *val, struct le *element)
     hash_append(map, key, element, val);
 }
 
-// map get value for key
+// insert into the map
+struct le *mapi_insert_alloc(struct hash *map, uint32_t key, void *val)
+{
+	struct le *element = calloc(sizeof(struct le), 1);
+    hash_append(map, key, element, val);
+	return element;
+}
+
+// get list element for key
 struct le *mapi_get(struct hash *map, uint32_t key)
 {
 	struct le *found = hash_lookup(map, key, hash_cmp_handler, &key);
 	return found;
+}
+
+// delete key
+void mapi_delete(struct hash *map, uint32_t key)
+{
+	struct le *le = mapi_get(map, key);
+	if (le) {
+		hash_unlink(le);
+	}
 }
 
 // map release
