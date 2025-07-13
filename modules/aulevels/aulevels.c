@@ -47,6 +47,8 @@ void aubuf_gain_s16le(int16_t *sampv, size_t sampc, double gain[CH_MAX], int ch)
 
 #define CHANNELS_MAX 128
 
+#define USE_CHANNELS_ARRAY // use array or mapi
+
 typedef struct {
 	// For select from encode/decode frame
 	void *p;
@@ -59,7 +61,9 @@ typedef struct {
 	double gain_dec[CH_MAX];
 } CHANNEL_GAIN;
 
+#ifdef USE_CHANNELS_ARRAY
 CHANNEL_GAIN channels[CHANNELS_MAX] = {0};
+#endif
 
 // CHANNELS ]
 // CHANNEL FUNCTIONS [
@@ -70,6 +74,10 @@ CHANNEL_GAIN *find_channel(void *p);
 CHANNEL_GAIN *alloc_channel(void *p);
 void dealloc_channel(void *p);
 int channels_apply_gain(struct audio *au, double gain_enc[CH_MAX], double gain_dec[CH_MAX]);
+
+// CHANNELS ARRAY [
+
+#ifdef USE_CHANNELS_ARRAY
 
 // Channel impl
 
@@ -129,6 +137,95 @@ int channels_apply_gain(struct audio *au, double gain_enc[CH_MAX], double gain_d
 	return count;
 }
 
+#endif // USE_CHANNELS_ARRAY
+
+// CHANNELS ARRAY ]
+// CHANNELS MAPI [
+
+#ifndef USE_CHANNELS_ARRAY
+
+void mapi_lazy_init() {
+	if (!channels_map)
+		return channels_map;
+
+	mapi_alloc(&channels_map);
+	return channels_map;
+}
+
+CHANNEL_GAIN *find_channel(void *p) {
+/*
+	for (int i = 0; i < CHANNELS_MAX; i++) {
+		CHANNEL_GAIN *channel = &channels[i];
+		if (channel->p == p) {
+			channel->index = i; // hack
+			return channel;
+		}
+	}
+	return NULL;
+*/
+}
+
+static struct hash *channels_map = NULL;
+
+CHANNEL_GAIN *alloc_channel(void *p) {
+/*
+	CHANNEL_GAIN *channel = find_channel(NULL);
+	if (!channel) {
+		info("Can't allocate channel for %p\n", p);
+		return NULL;
+	}
+	// Set gain to all channels 1.0
+	for (int i = 0; i < CH_MAX; i++) {
+		channel->gain_enc[i] = 1.0;
+		channel->gain_dec[i] = 1.0;
+	}
+
+	channel->p = p;
+	return channel;
+*/
+
+	CHANNEL_GAIN *channel = calloc(sizeof(*channel), 1);
+
+	if (channels_map) {
+		struct le element;
+		mapi_insert(channels_map, p, channel, &element);
+	}
+}
+
+void dealloc_channel(void *p) {
+/*
+	CHANNEL_GAIN *channel = find_channel(p);
+	if (!channel) {
+		info("Can't dealloc channel for %p\n", p);
+		return;
+	}
+	channel->p = NULL;
+*/
+}
+
+// Apply gain for channels with au selector for multiple channels
+int channels_apply_gain(struct audio *au, double gain_enc[CH_MAX], double gain_dec[CH_MAX]) {
+	int count = 0;
+	for (int i = 0; i < CHANNELS_MAX; i++) {
+		CHANNEL_GAIN *channel = &channels[i];
+		if (channel->au == au) {
+			for (int ich = 0; ich < CH_MAX; ich++) {
+				if (gain_enc[ich] >= 0) {
+					channel->gain_enc[ich] = gain_enc[ich];
+				}
+				if (gain_dec[ich] >= 0) {
+					channel->gain_dec[ich] = gain_dec[ich];
+				}
+			}
+			count++;
+		}
+	}
+	return count;
+}
+
+#endif // USE_CHANNELS_ARRAY
+
+// CHANNELS MAPI ]
 // CHANNEL FUNCTIONS ]
 // DESTRUCTOR [
 

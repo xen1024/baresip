@@ -11,12 +11,20 @@
 //#include "../modules/aulevels/aulevels.h"
 #include "../modules/aulevels/aulevels.c"
 
+int run_mapi(void);
+int run_hash(void);
+
 int test_mapi(void);
 
 static struct hash *my_map;
 
-void mapi_test(void)
+// TESTS [
+// MAPI RUN [
+
+int run_mapi(void)
 {
+	int err = 0;
+
 	mapi_alloc(&my_map);
 
 	uint32_t key = 0;
@@ -30,18 +38,15 @@ void mapi_test(void)
     }
 
 	mapi_release(my_map);
+
+	return err;
 }
 
-int test_mapi(void)
+// MAPI RUN ]
+// RUN HASH [
+
+int run_hash(void)
 {
-	int err = 0;
-
-   	// TEST MAP [
-	
-    mapi_test();
-
-    
-#if 0
 	// map_alloc
 	int err = hash_alloc(&my_map, 32);
 	if (err) {
@@ -64,9 +69,20 @@ int test_mapi(void)
 
 	// map_free
 	mem_deref(my_map);
-#endif
+	return err;
+}
 
-	// TEST MAP ]
+// RUN HASH ]
+// TEST MAPI [
+
+int test_mapi(void)
+{
+	int err = 0;
+
+    run_mapi();
+    run_hash();
+
+	goto out;
 
 out:
     return err;
@@ -83,16 +99,6 @@ int test_aulevels(void)
 	TEST_ERR(err);
 
 out:
-    /*
-	struct network *net = NULL;
-
-	err = net_alloc(&net, &default_config);
-	TEST_ERR(err);
-	ASSERT_TRUE(net != NULL);
-
- out:
-	mem_deref(net);
-    */
 	return err;
 }
 
