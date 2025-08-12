@@ -486,6 +486,7 @@ void aurecv_flush(struct audio_recv *ar)
 	mtx_unlock(ar->mtx);
 }
 
+// aurecv_decoder_set (AUDIO) [
 
 int aurecv_decoder_set(struct audio_recv *ar,
 		       const struct aucodec *ac, int pt, const char *params)
@@ -519,6 +520,7 @@ out:
 	return err;
 }
 
+// aurecv_decoder_set (AUDIO) ]
 
 int aurecv_payload_type(const struct audio_recv *ar)
 {

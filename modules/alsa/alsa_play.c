@@ -46,6 +46,7 @@ static void auplay_destructor(void *arg)
 	mem_deref(st->device);
 }
 
+// write_thread (AUDIO) [
 
 static int write_thread(void *arg)
 {
@@ -94,6 +95,7 @@ static int write_thread(void *arg)
 	return 0;
 }
 
+// write_thread (AUDIO) ]
 
 int alsa_play_alloc(struct auplay_st **stp, const struct auplay *ap,
 		    struct auplay_prm *prm, const char *device,

@@ -30,11 +30,13 @@
 struct aulevels_enc {
 	struct aufilt_enc_st af;  /* base class */
 	struct aufilt_prm prm;
+    struct channel_gain_t *channel;
 };
 
 struct aulevels_dec {
 	struct aufilt_dec_st af;  /* base class */
 	struct aufilt_prm prm;
+    struct channel_gain_t *channel;
 };
 
 // Audio buffer utilities
@@ -47,10 +49,10 @@ void aubuf_gain_s16le(int16_t *sampv, size_t sampc, double gain[CH_MAX], int ch)
 
 #define CHANNELS_MAX 128
 
-//#define USE_CHANNELS_ARRAY // use array or mapi
-#define USE_CHANNELS_MAPI // use mapi
+#define USE_CHANNELS_ARRAY // use array or mapi
+//#define USE_CHANNELS_MAPI // use mapi
 
-typedef struct {
+typedef struct channel_gain_t {
 	// For select from encode/decode frame
 	void *p;
 	// For select from command
@@ -75,6 +77,7 @@ CHANNEL_GAIN *find_channel(void *p);
 CHANNEL_GAIN *alloc_channel(void *p);
 void dealloc_channel(void *p);
 int channels_apply_gain(struct audio *au, double gain_enc[CH_MAX], double gain_dec[CH_MAX]);
+void dump_channels(void);
 
 // CHANNELS ARRAY [
 
@@ -137,6 +140,18 @@ int channels_apply_gain(struct audio *au, double gain_enc[CH_MAX], double gain_d
 	}
 	return count;
 }
+
+void dump_channels(void) {
+	for (int i = 0; i < CHANNELS_MAX; i++) {
+		CHANNEL_GAIN *channel = &channels[i];
+		if (channel->p) {
+			for (int ich = 0; ich < CH_MAX; ich++) {
+				info("CHANNEL %p CH %i gain_enc %lf gain_dec %lf", channel, ich, channel->gain_enc[ich], channel->gain_dec[ich]);
+			}
+		}
+	}
+}
+
 
 #endif // USE_CHANNELS_ARRAY
 
@@ -238,7 +253,8 @@ void dump_channels(void) {
 				continue; // SKIP ERROR
 
 			for (int ich = 0; ich < CH_MAX; ich++) {
-				info("CHANNEL %p CH %i gain_enc %lf gain_dec %lf", channel->gain_enc[ich], channel->gain_dec[ich]);
+//				info("CHANNEL %p CH %i gain_enc %lf gain_dec %lf", channel->gain_enc[ich], channel->gain_dec[ich]);
+				info("CHANNEL %p CH %i gain_enc %lf gain_dec %lf", channel, ich, channel->gain_enc[ich], channel->gain_dec[ich]);
 			}
 		}
 	}
@@ -310,6 +326,8 @@ static int encode_update(struct aufilt_enc_st **stp, void **ctx,
 		return EINVAL;
 	}
 
+	st->channel = channel;
+
 	channel->au = au;
 
 	info("ENCODE ALLOC %p channel=%i au=%p \n", st, channel->index, au);
@@ -347,11 +365,12 @@ static int decode_update(struct aufilt_dec_st **stp, void **ctx,
 	*stp = (struct aufilt_dec_st *)st;
 
 	CHANNEL_GAIN *channel = alloc_channel(st);
-
 	if (!channel) {
 		warning("aulevels: can't allocate channel for (%p)\n", st);
 		return EINVAL;
 	}
+
+	st->channel = channel;
 
 	channel->au = au;
 
@@ -363,21 +382,21 @@ static int decode_update(struct aufilt_dec_st **stp, void **ctx,
 // DECODE_UPDATE ]
 // ENCODE_FRAME [
 
-static int encode_frame(struct aufilt_enc_st *st, struct auframe *af)
+static int encode_frame(struct aufilt_enc_st *stp, struct auframe *af)
 {
-	// ENCODE GAIN [
-
-	CHANNEL_GAIN *channel = find_channel(st);
-	if (!channel) {
-		info("ENC: Can't find channel for %p\n", st);
-		return -1;
-	}
-
-	// ENCODE GAIN ]
+	struct aulevels_enc *st = (struct aulevels_enc *)stp;
 
 	if (!st || !af || !af->sampv || !af->sampc)
 		return EINVAL;
 
+	// Get channel
+	CHANNEL_GAIN *channel = st->channel;
+	if (!channel) {
+		info("ENC: Can't find channel for %p\n", st);
+		return EINVAL;
+	}
+
+	// Apply encode gain
 	if (af->fmt == AUFMT_S16LE) {
 		info("ENC: ch %i sampc %i\n", af->ch, (int)af->sampc);
         aubuf_gain_s16le(af->sampv, af->sampc, channel->gain_enc, af->ch);
@@ -389,9 +408,9 @@ static int encode_frame(struct aufilt_enc_st *st, struct auframe *af)
 // ENCODE_FRAME ]
 // DECODE_FRAME [
 
-static int decode_frame(struct aufilt_dec_st *aufilt_dec_st, struct auframe *af)
+static int decode_frame(struct aufilt_dec_st *stp, struct auframe *af)
 {
-	struct aulevels_dec *st = (struct aulevels_dec *)aufilt_dec_st;
+	struct aulevels_dec *st = (struct aulevels_dec *)stp;
 
 	if (!st || !af || !af->sampv || !af->sampc)
 		return EINVAL;
@@ -403,14 +422,14 @@ static int decode_frame(struct aufilt_dec_st *aufilt_dec_st, struct auframe *af)
 		return -1;
 	}
 
-	// DECODE GAIN [
-
-	CHANNEL_GAIN *channel = find_channel(st);
+	// Get channel
+	CHANNEL_GAIN *channel = st->channel;
 	if (!channel) {
 		info("DEC: Can't find channel for %p\n", st);
 		return -1;
 	}
 
+	// Apply decode gain
 	if (af->fmt == AUFMT_S16LE) {
         aubuf_gain_s16le(af->sampv, af->sampc, channel->gain_dec, af->ch);
     }
@@ -420,8 +439,6 @@ static int decode_frame(struct aufilt_dec_st *aufilt_dec_st, struct auframe *af)
 	if (qqq++ % 20==0) // Won't qqq overflow at some point?
 		info("DECODE_FRAME %p channel=%i gain_dec=%lf\n", st, channel->index, gain_dec);
 	#endif
-
-	// DECODE GAIN ]
 
 	return 0;
 }
@@ -558,6 +575,7 @@ static int cmd_aulevels_dump(struct re_printf *pf, void *arg)
 	(void)pf;
 	(void)arg;
 	dump_channels();
+	return 0;
 }
 
 // COMMAND /aulevelsdump ]

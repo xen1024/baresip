@@ -274,6 +274,7 @@ static int call_apply_sdp(struct call *call)
 	return err;
 }
 
+// update_streams (AUDIO) [
 
 static int update_streams(struct call *call)
 {
@@ -295,6 +296,8 @@ static int update_streams(struct call *call)
 	return err;
 }
 
+// update_streams (AUDIO) ]
+// call_update_media (CALL) [
 
 int call_update_media(struct call *call)
 {
@@ -306,6 +309,8 @@ int call_update_media(struct call *call)
 	return err;
 }
 
+// call_update_media (CALL) ]
+// update_media (CALL) [
 
 static int update_media(struct call *call)
 {
@@ -317,6 +322,7 @@ static int update_media(struct call *call)
 	return call_update_media(call);
 }
 
+// update_media (CALL) ]
 
 static void print_summary(const struct call *call)
 {
@@ -1815,6 +1821,7 @@ static int sipsess_offer_handler(struct mbuf **descp,
 	return 0;
 }
 
+// SIP ON ANSWER (CALL) [
 
 static int sipsess_answer_handler(const struct sip_msg *msg, void *arg)
 {
@@ -1857,6 +1864,7 @@ static int sipsess_answer_handler(const struct sip_msg *msg, void *arg)
 	return 0;
 }
 
+// SIP ON ANSWER (CALL) ]
 
 static void set_established_mdir(void *arg)
 {

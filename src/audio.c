@@ -1157,6 +1157,7 @@ static void audio_flush_filters(struct audio *a)
 	mtx_unlock(a->tx.mtx);
 }
 
+// audio_update (AUDIO) [
 
 /**
  * Update audio object and start/stop according to media direction
@@ -1238,6 +1239,7 @@ int audio_update(struct audio *a)
 	return err;
 }
 
+// audio_update (AUDIO) ]
 
 /**
  * This function simply calls audio_update() and kept for backward
@@ -1394,6 +1396,7 @@ int audio_encoder_set(struct audio *a, const struct aucodec *ac,
 	return err;
 }
 
+// audio_decoder_set (AUDIO) [
 
 /**
  * Set the audio decoder used
@@ -1440,6 +1443,7 @@ int audio_decoder_set(struct audio *a, const struct aucodec *ac,
 	return err;
 }
 
+// audio_decoder_set (AUDIO) ]
 
 /**
  * Get the RTP Stream object from an Audio object
