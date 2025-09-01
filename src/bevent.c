@@ -362,8 +362,15 @@ int odict_encode_bevent(struct odict *od, struct bevent *event)
 	if (!od)
 		return EINVAL;
 
-	err = odict_entry_add(od, "class",
-			      ODICT_STRING, bevent_class_name(event->ec));
+	// VUMETER skip "class" [
+
+	// Skip "class" for vumeter events
+	if (event->ev != BEVENT_VU_TX && event->ev != BEVENT_VU_RX) {
+		err = odict_entry_add(od, "class",
+				      ODICT_STRING, bevent_class_name(event->ec));
+	}
+
+	// VUMETER skip "class" ]
 
 	if (event->ec == BEVENT_CLASS_SIP) {
 		char *buf;
@@ -383,6 +390,45 @@ int odict_encode_bevent(struct odict *od, struct bevent *event)
 		err |= odict_entry_add(od, "from", ODICT_STRING, buf);
 		mem_deref(buf);
 	}
+
+		// VUMETER [
+
+	if (event->ev == BEVENT_VU_TX || event->ev == BEVENT_VU_RX) {
+		int mode = 0;
+		if (mode == 0) {
+			// SIMPLE2 {"id": "$call2", "v": "-1.0"}
+
+			const char *call_identifier = call_id(call);
+			if (call_identifier) {
+				err = odict_entry_add(od, "id", ODICT_STRING,
+							call_identifier);
+				if (err)
+					return err;
+			}
+			if (str_isset(prm)) {
+				err = odict_entry_add(od, "v", ODICT_STRING, prm);
+				if (err)
+					return err;
+			}
+			err = odict_entry_add(od, "t", ODICT_STRING,
+				event->ev == BEVENT_VU_TX ? "tx" : "rx");
+			if (err)
+				return err;
+
+		}
+		else if (mode == 1) {
+			// SIMPLE1 ["$call1", 1.0] //
+		}
+		else if (mode == 2) {
+			// MINIMAL call1,1.0
+		}
+		else if (mode == 3) {
+			// BIN-ZIP - maybe
+		}
+		return err;
+	}
+
+	// VUMETER ]
 
 	enum bevent_ev ev = event->ev;
 	err |= odict_entry_add(od, "type", ODICT_STRING, bevent_str(ev));

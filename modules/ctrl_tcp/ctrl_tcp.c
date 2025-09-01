@@ -267,7 +267,15 @@ static void event_handler(enum bevent_ev ev, struct bevent *event, void *arg)
 	if (err)
 		return;
 
-	err = odict_entry_add(od, "event", ODICT_BOOL, true);
+	// VUMETER skip "events" [
+
+	// Skip "class" for vumeter events
+	if (ev != BEVENT_VU_TX && ev != BEVENT_VU_RX) {
+		err = odict_entry_add(od, "event", ODICT_BOOL, true);
+	}
+
+	// VUMETER skip "events" ]
+
 	err |= odict_encode_bevent(od, event);
 	if (err) {
 		warning("ctrl_tcp: failed to encode event (%m)\n", err);
